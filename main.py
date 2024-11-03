@@ -4,7 +4,7 @@ from typing import Literal
 import httpx
 import logging
 from chains.extraction import process_and_extract_document
-from chains.suggestion import generate_suggestions
+from chains.suggestion import Suggestion, generate_suggestions
 from langchain_core.vectorstores import VectorStore
 from dependencies import get_embeddings, get_vector_store, get_retriever
 from chains.suggestion import ChatMessage
@@ -18,8 +18,38 @@ class FileUrlRequest(BaseModel):
     url: str
     callback_url: str
     patient_id: str
+    
+description = """Process a file and send the results to a callback URL.
 
-@app.post("/process-file", status_code=201, response_description="File processing started", response_model=Literal["OK"])
+The callback URL will receive a POST request with one of these JSON payloads:
+
+On success:
+```json
+{
+    "status": "success",
+    "hl7_fhir_data": "<FHIR resource JSON>",
+    "raw_text": "<extracted text>",
+    "mortal_readable": "<human readable text>"
+}
+```
+
+On error:
+```json
+{
+    "status": "error", 
+    "error": "<error message>"
+}
+    ```
+"""
+
+
+@app.post(
+    "/process-file", 
+    status_code=201, 
+    response_description="File processing started", 
+    response_model=Literal["OK"], 
+    description=description
+)
 async def process_file_endpoint(
     file_request: FileUrlRequest,
     background_tasks: BackgroundTasks,
@@ -83,7 +113,7 @@ class SuggestionsRequest(BaseModel):
     patient_id: str
     chat_history: list[ChatMessage]
     
-@app.post("/suggestions")
+@app.post("/suggestions", response_model=Suggestion, description="Generate AI-assisted medical suggestions based on chat history.")
 async def get_suggestions(request: SuggestionsRequest):
     embeddings = get_embeddings()
     vector_store = get_vector_store(embeddings)
