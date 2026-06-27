@@ -1,5 +1,7 @@
 # Medical Record Extraction Service
 
+> Built at [Hack Jak Brno 2024](https://www.hackjakbrno.cz/home-2024/), where it won the InterSystems challenge.
+
 Turns messy medical documents (scans, PDFs, clinical notes) into structured **HL7 FHIR** data, a plain-text clinical summary, and a patient-friendly explanation — then answers questions about them with retrieval-augmented AI.
 
 Built around **InterSystems IRIS** as the vector store, so every processed document is semantically searchable and scoped to a patient.
