@@ -1,89 +1,60 @@
 # Medical Record Extraction Service
 
-A service for processing medical documents, extracting structured data in FHIR format, and providing AI-assisted medical suggestions. This system helps healthcare providers digitize, structure, and understand medical documents while maintaining compliance with healthcare data standards.
+Turns messy medical documents (scans, PDFs, clinical notes) into structured **HL7 FHIR** data, a plain-text clinical summary, and a patient-friendly explanation — then answers questions about them with retrieval-augmented AI.
 
-## Features
+Built around **InterSystems IRIS** as the vector store, so every processed document is semantically searchable and scoped to a patient.
 
-### Document Processing
+## What it does
 
-- Processes medical documents using high-resolution document parsing
-- Supports multiple languages (including Czech)
-- Converts documents to structured formats while preserving original content
-- Generates three different outputs for each document:
-  - HL7 FHIR (Fast Healthcare Interoperability Resources)
-  - Plain text summaries
-  - Patient-friendly explanations ("Mortal Readable")
+- **Document processing** — parses medical documents with high-resolution layout extraction; multilingual (including Czech), preserving the original content.
+- **Three outputs per document:**
+  - **HL7 FHIR R4** — structured, standards-compliant clinical data
+  - **Plain-text summary** — a concise clinical overview
+  - **Patient-friendly explanation** — the same content in plain language
+- **AI suggestions (RAG)** — context-aware answers grounded in the relevant patient documents, keeping conversation history across a doctor–patient exchange.
+- **Vector storage** — documents are embedded and stored in the IRIS Vector Store, linked to patient IDs for filtered, semantic retrieval.
 
-### AI-Assisted Suggestions
+## How it works
 
-- Provides context-aware medical suggestions based on chat history
-- Uses RAG (Retrieval Augmented Generation) to incorporate relevant medical documents
-- Maintains conversation context between doctor and patient interactions
-
-### Vector Storage
-
-- Stores processed documents in IRIS Vector Store
-- Enables semantic search capabilities
-- Links documents to specific patient IDs
-- Supports filtered retrieval based on patient context
-
-## Technical Stack
-
-- **Backend Framework**: FastAPI
-- **Language Models**: OpenAI GPT-4
-- **Document Processing**: Unstructured API
-- **Vector Store**: IRIS Vector
-- **LLM Framework**: LangChain
-- **Data Validation**: Pydantic
-- **Healthcare Standards**: HL7 FHIR R4
-
-## Prerequisites
-
-- Python 3.9+
-- IRIS Database
-- OpenAI API access
-- Unstructured API access
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-OPENAI_API_KEY=your_key_here
-UNSTRUCTURED_API_KEY=your_key_here
-IRIS_VECTOR_COLLECTION_NAME=your_collection_name
-IRIS_CONNECTION_STRING=your_connection_string
+```
+document → Unstructured (parse) → GPT-4 (structure → FHIR + summaries)
+         → embed + store in IRIS Vector Store (per patient)
+         → chat endpoint: RAG over IRIS for grounded suggestions
 ```
 
-## Installation
+- `main.py` — FastAPI app and API endpoints (`/docs` for the OpenAPI UI)
+- `chains/` — the LangChain processing and RAG chains
+- `models/` — Pydantic and FHIR data models
+- `dependencies/` — shared clients (IRIS connection, LLM, document parsing)
+- `config.py` — configuration
 
-1. Clone the repository
+## Tech stack
+
+FastAPI · OpenAI GPT-4 · LangChain · Unstructured (document parsing) · InterSystems IRIS Vector Store · Pydantic · HL7 FHIR R4 · Python 3.9+
+
+## Running locally
+
+**Prerequisites:** Python 3.9+, an IRIS database, OpenAI API access, Unstructured API access.
 
 ```bash
 git clone git@github.com:ploca14/file-digestor.git
 cd file-digestor
-```
-
-2. Install dependencies
-
-```bash
 pip install -r requirements.txt
+cp .env.example .env   # then fill in your keys
 ```
 
-3. Set up environment variables
+`.env`:
 
-```bash
-cp .env.example .env
+```env
+OPENAI_API_KEY=...
+UNSTRUCTURED_API_KEY=...
+IRIS_VECTOR_COLLECTION_NAME=...
+IRIS_CONNECTION_STRING=...
 ```
 
-Edit .env file with your keys and configuration
-
-## Development
-
-1. Run the development server
+Run the dev server and open the interactive API docs:
 
 ```bash
 fastapi dev main.py
+# http://127.0.0.1:8000/docs
 ```
-
-2. Access the API documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
