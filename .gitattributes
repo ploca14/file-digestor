@@ -1,0 +1,2 @@
+# Keep scratch notebooks out of language stats so the repo reads as Python
+*.ipynb linguist-detectable=false
